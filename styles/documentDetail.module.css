@@ -1,0 +1,88 @@
+.container {
+  min-height: 100vh;
+  background: #fafafa;
+  padding: 2rem;
+}
+
+.toolbar {
+  max-width: 900px;
+  margin: 0 auto 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.backButton {
+  padding: 0.5rem 1rem;
+  background: white;
+  color: #000;
+  font-size: 14px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.backButton:hover {
+  background: #f5f5f5;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.editBtn,
+.saveBtn,
+.cancelBtn,
+.deleteBtn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.editBtn,
+.saveBtn {
+  background: #000;
+  color: white;
+}
+
+.editBtn:hover,
+.saveBtn:hover {
+  background: #333;
+}
+
+.cancelBtn {
+  background: #f5f5f5;
+  color: #000;
+  border: 1px solid #e0e0e0;
+}
+
+.cancelBtn:hover {
+  background: #e0e0e0;
+}
+
+.deleteBtn {
+  background: #d32f2f;
+  color: white;
+}
+
+.deleteBtn:hover {
+  background: #b71c1c;
+}
+
+.content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.loading,
+.errorContainer {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: #666;
+}

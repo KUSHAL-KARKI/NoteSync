@@ -21,7 +21,6 @@ const Login = () => {
         username,
         password,
       });
-      localStorage.setItem("token", res.data.token);
       router.push("/");
     } catch (err: any) {
       console.log(err);
