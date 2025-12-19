@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
         status: 401,
       });
     }
-    
+
     // Get documents owned by or collaborated with the user
     const ownedDocuments = await Document.find({
       $or: [
@@ -27,37 +27,36 @@ export async function GET(req: NextRequest) {
     })
       .populate("owner", "username email")
       .populate("collaborators", "username email");
-    
+
     // Get documents shared with the user via Share collection
-    const sharedDocs = await Share.find({ userId })
-      .populate({
-        path: "documentId",
-        populate: {
-          path: "owner",
-          select: "username email"
-        }
-      });
-    
+    const sharedDocs = await Share.find({ userId }).populate({
+      path: "documentId",
+      populate: {
+        path: "owner",
+        select: "username email",
+      },
+    });
+
     // Extract the documents from shared collection and add permission info
     const sharedDocuments = sharedDocs
-      .filter(share => share.documentId) // Filter out null documents
-      .map(share => ({
+      .filter((share) => share.documentId) // Filter out null documents
+      .map((share) => ({
         ...share.documentId.toObject(),
-        sharedPermission: share.permission
+        sharedPermission: share.permission,
       }));
-    
+
     // Combine both arrays and remove duplicates
     const documentMap = new Map();
-    
-    [...ownedDocuments, ...sharedDocuments].forEach(doc => {
+
+    [...ownedDocuments, ...sharedDocuments].forEach((doc) => {
       const id = doc._id.toString();
       if (!documentMap.has(id)) {
         documentMap.set(id, doc);
       }
     });
-    
+
     const documents = Array.from(documentMap.values());
-    
+
     return NextResponse.json(
       { message: "Documents fetched successfully", documents },
       { status: 200 }

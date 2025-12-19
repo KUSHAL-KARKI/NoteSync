@@ -74,7 +74,7 @@ useEffect(() => {
             <div className={styles.cardIcon}>👥</div>
             <h3>Shared</h3>
             <p>Collaborate with others</p>
-            <button className={styles.cardBtn}>Open</button>
+            <button className={styles.cardBtn} onClick={()=>(router.push('/share'))}>Open</button>
           </div>
         </div>
       </main>
