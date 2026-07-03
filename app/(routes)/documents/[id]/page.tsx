@@ -3,11 +3,11 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import styles from "../../../styles/documentDetail.module.css";
+import styles from "../../../../styles/documentDetail.module.css";
 import useEditorStore from "@/stores/useEditorStore";
 import Tiptap from "@/components/editor/textEditor";
 
-interface Document {
+interface DocumentData {
   _id: string;
   title: string;
   content: string;
@@ -28,57 +28,82 @@ export default function Page() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  
-  const [document, setDocument] = useState<Document | null>(null);
+
+  const [doc, setDoc] = useState<DocumentData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!id) return;
 
-    const documentDetails = async () => {
+    const fetchDocument = async () => {
       setLoading(true);
       setError(null);
 
       try {
         const res = await axios.get(`/api/documents/${id}`);
         const fetchedDoc = res.data;
-        setDocument(fetchedDoc);
+        setDoc(fetchedDoc);
         setContent(fetchedDoc.content || "");
-      } catch (err: any) {
-        console.error("Failed to fetch document details", err);
-        setError(err?.response?.data?.error || "Failed to load document");
+      } catch (err) {
+        if (axios.isAxiosError(err)) {
+          setError(err.response?.data?.message || "Failed to fetch document");
+        } else {
+          setError("Failed to fetch document");
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    documentDetails();
+    fetchDocument();
   }, [id, setContent]);
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this document?")) return;
-    
+
+    setDeleting(true);
     try {
       await axios.delete(`/api/documents/${id}`);
       router.push("/documents");
-    } catch (err: any) {
-      alert(err?.response?.data?.error || "Failed to delete document");
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        alert(err.response?.data?.message || "Failed to delete document");
+      } else {
+        alert("Failed to delete document");
+      }
+      setDeleting(false);
     }
   };
 
   const handleSave = async () => {
+    setSaving(true);
     try {
       await axios.put(`/api/documents/${id}`, {
-        title: document?.title,
+        title: doc?.title,
         content: content,
       });
+      setDoc((prev) => (prev ? { ...prev, content } : prev));
       alert("Document saved successfully!");
       setIsEditing(false);
-    } catch (err: any) {
-      alert(err?.response?.data?.error || "Failed to save document");
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        alert(err.response?.data?.message || "Failed to save document");
+      } else {
+        alert("Failed to save document");
+      }
+    } finally {
+      setSaving(false);
     }
+  };
+
+  const handleCancel = () => {
+    // revert the editor store back to the last saved content
+    setContent(doc?.content || "");
+    setIsEditing(false);
   };
 
   if (loading) {
@@ -98,7 +123,7 @@ export default function Page() {
     );
   }
 
-  if (!document) {
+  if (!doc) {
     return (
       <div className={styles.errorContainer}>
         <div className={styles.errorIcon}>📄</div>
@@ -119,10 +144,10 @@ export default function Page() {
         <div className={styles.actions}>
           {isEditing ? (
             <>
-              <button onClick={handleSave} className={styles.saveBtn}>
-                Save
+              <button onClick={handleSave} className={styles.saveBtn} disabled={saving}>
+                {saving ? "Saving..." : "Save"}
               </button>
-              <button onClick={() => setIsEditing(false)} className={styles.cancelBtn}>
+              <button onClick={handleCancel} className={styles.cancelBtn} disabled={saving}>
                 Cancel
               </button>
             </>
@@ -131,8 +156,8 @@ export default function Page() {
               <button onClick={() => setIsEditing(true)} className={styles.editBtn}>
                 Edit
               </button>
-              <button onClick={handleDelete} className={styles.deleteBtn}>
-                Delete
+              <button onClick={handleDelete} className={styles.deleteBtn} disabled={deleting}>
+                {deleting ? "Deleting..." : "Delete"}
               </button>
             </>
           )}
@@ -140,7 +165,7 @@ export default function Page() {
       </div>
 
       <div className={styles.content}>
-        <Tiptap isEditing={isEditing} initialContent={document.content} />
+        <Tiptap isEditing={isEditing} initialContent={doc.content} />
       </div>
     </div>
   );

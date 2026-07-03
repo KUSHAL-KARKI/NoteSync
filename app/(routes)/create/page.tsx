@@ -1,18 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import useEditorStore from "@/stores/useEditorStore";
-import styles from "../../styles/create.module.css";
+import styles from "../../../styles/create.module.css";
 import Tiptap from "@/components/editor/textEditor";
 
 const CreatePage = () => {
   const router = useRouter();
-  const { content } = useEditorStore();
+  const { content, setContent } = useEditorStore();
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // This page always starts a brand-new document, so clear any content
+  // left over in the store from a previously viewed/edited document.
+  useEffect(() => {
+    setContent("");
+  }, [setContent]);
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -23,7 +29,6 @@ const CreatePage = () => {
       setError("Please add some content");
       return;
     }
-
     setLoading(true);
     setError("");
 
@@ -32,9 +37,16 @@ const CreatePage = () => {
         title,
         content,
       });
-      router.push("/");
-    } catch (err: any) {
-      setError(err?.response?.data?.error || "Failed to create document");
+      if (res.status === 201) {
+        setContent(""); // clear before leaving, so /create is clean next time too
+        router.push("/");
+      }
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message || "Data Creation failed");
+      } else {
+        setError("Data Creation failed");
+      }
     } finally {
       setLoading(false);
     }
@@ -42,6 +54,7 @@ const CreatePage = () => {
 
   const handleCancel = () => {
     if (confirm("Are you sure? Your changes will be lost.")) {
+      setContent("");
       router.push("/");
     }
   };
@@ -73,7 +86,6 @@ const CreatePage = () => {
       {error && <div className={styles.error}>{error}</div>}
 
       <Tiptap isEditing={true} initialContent="" />
-      
     </div>
   );
 };

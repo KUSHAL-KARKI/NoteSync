@@ -2,7 +2,8 @@
 import axios from "axios";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import styles from "../../styles/register.module.css";
+import Link from "next/link";
+import styles from "../../../styles/register.module.css";
 
 const Register = () => {
   const [username, setUsername] = useState("");
@@ -23,10 +24,15 @@ const Register = () => {
         email,
         password,
       });
-      router.push("/login");
-    } catch (err: any) {
-      console.log(err);
-      setError(err?.response?.data?.message || "Registration failed");
+      if (res.status === 201) {
+        router.push("/login");
+      }
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message || "Registration failed");
+      } else {
+        setError("Registration failed");
+      }
     } finally {
       setLoading(false);
     }
@@ -79,7 +85,7 @@ const Register = () => {
           </button>
         </form>
         <p className={styles.footer}>
-          Already have an account? <a href="/login">Login</a>
+          Already have an account? <Link href="/login">Login</Link>
         </p>
       </div>
     </div>

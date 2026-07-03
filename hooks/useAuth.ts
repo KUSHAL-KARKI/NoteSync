@@ -12,6 +12,7 @@ export function useAuth() {
         const res = await axios.get("/api/auth/me");
         setUser(res.data); // user data
       } catch (err) {
+        console.error("Failed to fetch user:", err);
         setUser(""); // not logged in
       } finally {
         setLoading(false);

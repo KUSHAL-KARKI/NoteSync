@@ -1,6 +1,6 @@
 import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "../../styles/menuBar.module.css";
 import { 
   FaBold, FaCode, FaItalic, FaListOl, FaQuoteLeft, 
@@ -13,10 +13,39 @@ import { LuHeading, LuHeading1, LuHeading2, LuHeading3, LuList } from "react-ico
 import { RiTextBlock } from "react-icons/ri";
 import { MdHorizontalRule } from "react-icons/md";
 
+type MenuKey = "heading" | "list" | "align" | null;
+
+// Only allow safe URL schemes. Blocks javascript:, data:, vbscript:, etc.
+const isSafeUrl = (url: string): boolean => {
+  try {
+    const trimmed = url.trim();
+    // allow protocol-relative and relative URLs too
+    if (trimmed.startsWith("/") || trimmed.startsWith("#")) return true;
+    const parsed = new URL(trimmed, window.location.origin);
+    return ["http:", "https:", "mailto:"].includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+};
+
 export default function MenuBar({ editor }: { editor: Editor }) {
-  const [showHeadingMenu, setShowHeadingMenu] = useState(false);
-  const [showListMenu, setShowListMenu] = useState(false);
-  const [showAlignMenu, setShowAlignMenu] = useState(false);
+  const [openMenu, setOpenMenu] = useState<MenuKey>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close any open dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenu(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const toggleMenu = (key: MenuKey) => {
+    setOpenMenu((prev) => (prev === key ? null : key));
+  };
 
   const editorState = useEditorState({
     editor,
@@ -55,16 +84,22 @@ export default function MenuBar({ editor }: { editor: Editor }) {
 
   const addLink = useCallback(() => {
     const url = window.prompt('Enter URL:');
-    if (url) {
-      editor.chain().focus().setLink({ href: url }).run();
+    if (!url) return;
+    if (!isSafeUrl(url)) {
+      alert("That URL isn't allowed. Please use an http(s) or mailto link.");
+      return;
     }
+    editor.chain().focus().setLink({ href: url.trim() }).run();
   }, [editor]);
 
   const addImage = useCallback(() => {
     const url = window.prompt('Enter image URL:');
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
+    if (!url) return;
+    if (!isSafeUrl(url)) {
+      alert("That URL isn't allowed. Please use an http(s) image link.");
+      return;
     }
+    editor.chain().focus().setImage({ src: url.trim() }).run();
   }, [editor]);
 
   const addTable = useCallback(() => {
@@ -72,10 +107,11 @@ export default function MenuBar({ editor }: { editor: Editor }) {
   }, [editor]);
 
   return (
-    <div className={styles.menuBar}>
+    <div className={styles.menuBar} ref={menuRef}>
       {/* Undo/Redo */}
       <div className={styles.section}>
         <button
+          type="button"
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editorState.canUndo}
           title="Undo"
@@ -83,6 +119,7 @@ export default function MenuBar({ editor }: { editor: Editor }) {
           <FaUndo />
         </button>
         <button
+          type="button"
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editorState.canRedo}
           title="Redo"
@@ -97,7 +134,8 @@ export default function MenuBar({ editor }: { editor: Editor }) {
       <div className={styles.section}>
         <div className={styles.dropdown}>
           <button
-            onClick={() => setShowHeadingMenu(!showHeadingMenu)}
+            type="button"
+            onClick={() => toggleMenu("heading")}
             className={
               editorState.isHeading1 || editorState.isHeading2 || editorState.isHeading3
                 ? styles.active
@@ -108,30 +146,33 @@ export default function MenuBar({ editor }: { editor: Editor }) {
             <LuHeading />
             <FaChevronDown className={styles.chevron} />
           </button>
-          {showHeadingMenu && (
+          {openMenu === "heading" && (
             <div className={styles.dropdownMenu}>
               <button
+                type="button"
                 onClick={() => {
                   editor.chain().focus().toggleHeading({ level: 1 }).run();
-                  setShowHeadingMenu(false);
+                  setOpenMenu(null);
                 }}
                 className={editorState.isHeading1 ? styles.active : ""}
               >
                 <LuHeading1 /> Heading 1
               </button>
               <button
+                type="button"
                 onClick={() => {
                   editor.chain().focus().toggleHeading({ level: 2 }).run();
-                  setShowHeadingMenu(false);
+                  setOpenMenu(null);
                 }}
                 className={editorState.isHeading2 ? styles.active : ""}
               >
                 <LuHeading2 /> Heading 2
               </button>
               <button
+                type="button"
                 onClick={() => {
                   editor.chain().focus().toggleHeading({ level: 3 }).run();
-                  setShowHeadingMenu(false);
+                  setOpenMenu(null);
                 }}
                 className={editorState.isHeading3 ? styles.active : ""}
               >
@@ -147,6 +188,7 @@ export default function MenuBar({ editor }: { editor: Editor }) {
       {/* Text formatting */}
       <div className={styles.section}>
         <button
+          type="button"
           onClick={() => editor.chain().focus().toggleBold().run()}
           disabled={!editorState.canBold}
           className={editorState.isBold ? styles.active : ""}
@@ -155,6 +197,7 @@ export default function MenuBar({ editor }: { editor: Editor }) {
           <FaBold />
         </button>
         <button
+          type="button"
           onClick={() => editor.chain().focus().toggleItalic().run()}
           disabled={!editorState.canItalic}
           className={editorState.isItalic ? styles.active : ""}
@@ -163,6 +206,7 @@ export default function MenuBar({ editor }: { editor: Editor }) {
           <FaItalic />
         </button>
         <button
+          type="button"
           onClick={() => editor.chain().focus().toggleStrike().run()}
           disabled={!editorState.canStrike}
           className={editorState.isStrike ? styles.active : ""}
@@ -171,6 +215,7 @@ export default function MenuBar({ editor }: { editor: Editor }) {
           <FaStrikethrough />
         </button>
         <button
+          type="button"
           onClick={() => editor.chain().focus().toggleCode().run()}
           disabled={!editorState.canCode}
           className={editorState.isCode ? styles.active : ""}
@@ -179,6 +224,7 @@ export default function MenuBar({ editor }: { editor: Editor }) {
           <FaCode />
         </button>
         <button
+          type="button"
           onClick={() => editor.chain().focus().toggleUnderline().run()}
           className={editorState.isUnderline ? styles.active : ""}
           title="Underline"
@@ -186,6 +232,7 @@ export default function MenuBar({ editor }: { editor: Editor }) {
           <FaUnderline />
         </button>
         <button
+          type="button"
           onClick={() => editor.chain().focus().toggleHighlight().run()}
           className={editorState.isHighlight ? styles.active : ""}
           title="Highlight"
@@ -200,7 +247,8 @@ export default function MenuBar({ editor }: { editor: Editor }) {
       <div className={styles.section}>
         <div className={styles.dropdown}>
           <button
-            onClick={() => setShowListMenu(!showListMenu)}
+            type="button"
+            onClick={() => toggleMenu("list")}
             className={
               editorState.isBulletList || editorState.isOrderedList
                 ? styles.active
@@ -211,21 +259,23 @@ export default function MenuBar({ editor }: { editor: Editor }) {
             <LuList />
             <FaChevronDown className={styles.chevron} />
           </button>
-          {showListMenu && (
+          {openMenu === "list" && (
             <div className={styles.dropdownMenu}>
               <button
+                type="button"
                 onClick={() => {
                   editor.chain().focus().toggleBulletList().run();
-                  setShowListMenu(false);
+                  setOpenMenu(null);
                 }}
                 className={editorState.isBulletList ? styles.active : ""}
               >
                 <LuList /> Bullet List
               </button>
               <button
+                type="button"
                 onClick={() => {
                   editor.chain().focus().toggleOrderedList().run();
-                  setShowListMenu(false);
+                  setOpenMenu(null);
                 }}
                 className={editorState.isOrderedList ? styles.active : ""}
               >
@@ -235,6 +285,7 @@ export default function MenuBar({ editor }: { editor: Editor }) {
           )}
         </div>
         <button
+          type="button"
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
           className={editorState.isCodeBlock ? styles.active : ""}
           title="Code Block"
@@ -242,6 +293,7 @@ export default function MenuBar({ editor }: { editor: Editor }) {
           <RiTextBlock />
         </button>
         <button
+          type="button"
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           className={editorState.isBlockquote ? styles.active : ""}
           title="Quote"
@@ -256,7 +308,8 @@ export default function MenuBar({ editor }: { editor: Editor }) {
       <div className={styles.section}>
         <div className={styles.dropdown}>
           <button
-            onClick={() => setShowAlignMenu(!showAlignMenu)}
+            type="button"
+            onClick={() => toggleMenu("align")}
             className={
               editorState.isAlignLeft || editorState.isAlignCenter || 
               editorState.isAlignRight || editorState.isAlignJustify
@@ -268,39 +321,43 @@ export default function MenuBar({ editor }: { editor: Editor }) {
             <FaAlignLeft />
             <FaChevronDown className={styles.chevron} />
           </button>
-          {showAlignMenu && (
+          {openMenu === "align" && (
             <div className={styles.dropdownMenu}>
               <button
+                type="button"
                 onClick={() => {
                   editor.chain().focus().setTextAlign('left').run();
-                  setShowAlignMenu(false);
+                  setOpenMenu(null);
                 }}
                 className={editorState.isAlignLeft ? styles.active : ""}
               >
                 <FaAlignLeft /> Align Left
               </button>
               <button
+                type="button"
                 onClick={() => {
                   editor.chain().focus().setTextAlign('center').run();
-                  setShowAlignMenu(false);
+                  setOpenMenu(null);
                 }}
                 className={editorState.isAlignCenter ? styles.active : ""}
               >
                 <FaAlignCenter /> Align Center
               </button>
               <button
+                type="button"
                 onClick={() => {
                   editor.chain().focus().setTextAlign('right').run();
-                  setShowAlignMenu(false);
+                  setOpenMenu(null);
                 }}
                 className={editorState.isAlignRight ? styles.active : ""}
               >
                 <FaAlignRight /> Align Right
               </button>
               <button
+                type="button"
                 onClick={() => {
                   editor.chain().focus().setTextAlign('justify').run();
-                  setShowAlignMenu(false);
+                  setOpenMenu(null);
                 }}
                 className={editorState.isAlignJustify ? styles.active : ""}
               >
@@ -316,6 +373,7 @@ export default function MenuBar({ editor }: { editor: Editor }) {
       {/* Special formatting */}
       <div className={styles.section}>
         <button
+          type="button"
           onClick={() => editor.chain().focus().toggleSubscript().run()}
           className={editorState.isSubscript ? styles.active : ""}
           title="Subscript"
@@ -323,6 +381,7 @@ export default function MenuBar({ editor }: { editor: Editor }) {
           <FaSubscript />
         </button>
         <button
+          type="button"
           onClick={() => editor.chain().focus().toggleSuperscript().run()}
           className={editorState.isSuperscript ? styles.active : ""}
           title="Superscript"
@@ -335,16 +394,17 @@ export default function MenuBar({ editor }: { editor: Editor }) {
 
       {/* Insert elements */}
       <div className={styles.section}>
-        <button onClick={addLink} className={editorState.isLink ? styles.active : ""} title="Insert Link">
+        <button type="button" onClick={addLink} className={editorState.isLink ? styles.active : ""} title="Insert Link">
           <FaLink />
         </button>
-        <button onClick={addImage} title="Insert Image">
+        <button type="button" onClick={addImage} title="Insert Image">
           <FaImage />
         </button>
-        <button onClick={addTable} title="Insert Table">
+        <button type="button" onClick={addTable} title="Insert Table">
           <FaTable />
         </button>
         <button
+          type="button"
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
           title="Horizontal Line"
         >

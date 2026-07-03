@@ -2,7 +2,8 @@
 import axios from "axios";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import styles from "../../styles/login.module.css";
+import Link from "next/link";
+import styles from "../../../styles/login.module.css";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -21,10 +22,15 @@ const Login = () => {
         username,
         password,
       });
-      router.push("/");
-    } catch (err: any) {
-      console.log(err);
-      setError(err?.response?.data?.message || "Login failed");
+      if (res.status === 200) {
+        router.push("/");
+      }
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message || "Login failed");
+      } else {
+        setError("Login failed");
+      }
     } finally {
       setLoading(false);
     }
@@ -65,7 +71,7 @@ const Login = () => {
           </button>
         </form>
         <p className={styles.footer}>
-          Don't have an account? <a href="/register">Register</a>
+          Don&apos;t have an account? <Link href="/register">Register</Link>
         </p>
       </div>
     </div>

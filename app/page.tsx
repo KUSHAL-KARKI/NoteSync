@@ -1,27 +1,14 @@
 "use client";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import styles from "../styles/home.module.css";
 import { useAuth } from "@/hooks/useAuth";
 
 const HomePage = () => {
   const router = useRouter();
-  const [username, setUsername] = useState<string>("");
-  const [auth, setAuth] = useState<boolean>(false);
- const { user, loading } = useAuth();
+  const { user, loading } = useAuth();
 
-useEffect(() => {
-  if (!loading) {
-    if (!user) {
-      router.push("/login");
-    } else {
-      setUsername(user.username);
-      setAuth(true);
-    }
-  }
-}, [loading, user, router]);
-
+  const auth = !!user;
 
   const handleLogout = async () => {
     try {
@@ -34,6 +21,11 @@ useEffect(() => {
 
   if (loading) {
     return <div className={styles.loading}>Loading...</div>;
+  }
+
+  if (!auth) {
+    router.push("/login");
+    return null;
   }
 
   return (
@@ -49,7 +41,9 @@ useEffect(() => {
 
       <main className={styles.main}>
         <div className={styles.hero}>
-          <h1 className={styles.heroTitle}>Welcome to Your Dashboard , {username}</h1>
+          <h1 className={styles.heroTitle}>
+            Welcome {user?.username} to Dashboard
+          </h1>
           <p className={styles.heroSubtitle}>
             Manage your notes and collaborate with others
           </p>
@@ -60,21 +54,36 @@ useEffect(() => {
             <div className={styles.cardIcon}>📝</div>
             <h3>Create Note</h3>
             <p>Start writing your thoughts</p>
-            <button className={styles.cardBtn} onClick={()=>(router.push('/create'))}>New Note</button>
+            <button
+              className={styles.cardBtn}
+              onClick={() => router.push("/create")}
+            >
+              New Note
+            </button>
           </div>
 
           <div className={styles.card}>
             <div className={styles.cardIcon}>📂</div>
             <h3>My Documents</h3>
             <p>View all your saved notes</p>
-            <button className={styles.cardBtn} onClick={()=>(router.push('/documents'))}>View All</button>
+            <button
+              className={styles.cardBtn}
+              onClick={() => router.push("/documents")}
+            >
+              View All
+            </button>
           </div>
 
           <div className={styles.card}>
             <div className={styles.cardIcon}>👥</div>
             <h3>Shared</h3>
             <p>Collaborate with others</p>
-            <button className={styles.cardBtn} onClick={()=>(router.push('/share'))}>Open</button>
+            <button
+              className={styles.cardBtn}
+              onClick={() => router.push("/share")}
+            >
+              Open
+            </button>
           </div>
         </div>
       </main>

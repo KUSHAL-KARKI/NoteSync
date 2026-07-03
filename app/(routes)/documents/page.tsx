@@ -2,7 +2,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import styles from "../../styles/documents.module.css";
+import styles from "../../../styles/documents.module.css";
 
 interface Document {
   _id: string;
@@ -32,11 +32,11 @@ const Documents = () => {
       const res = await axios.get("/api/documents");
       setDocuments(res.data.documents);
       setError(null);
-    } catch (err: any) {
-      console.error(err);
-      setError(err?.response?.data?.error || "Failed to load documents");
-      if (err?.response?.status === 401) {
-        router.push("/login");
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message || "Failed to load documents");
+      } else {
+        setError("Failed to load documents");
       }
     } finally {
       setLoading(false);
