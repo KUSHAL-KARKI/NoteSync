@@ -1,89 +1,122 @@
 # NoteSync
 
-NoteSync is a collaborative note-taking and document editor built with Next.js, MongoDB, TipTap, and Socket.IO. The app supports user authentication, document creation, sharing, and real-time editing so multiple users can work on the same note at the same time.
+> A real-time collaborative note-taking and document editor built with **Next.js**, **MongoDB**, **TipTap**, and **Socket.IO**.
 
-## Overview
+NoteSync is a full-stack collaborative document editor inspired by modern productivity tools such as Google Docs. It allows users to create, edit, and share rich-text documents while collaborating with others in real time. The project was built to explore modern full-stack development concepts including authentication, authorization, WebSockets, and rich-text editing.
 
-The project is structured as a full-stack Next.js application with API routes for authentication and document management, client-side editor components for rich text editing, and a custom Node server that hosts both Next.js and Socket.IO together.
+---
 
-The main user flow is:
+## ✨ Features
 
-1. Register or log in.
-2. Create a document from the dashboard.
-3. Open a document in the editor.
-4. Share it with another user by email.
-5. Edit collaboratively with live updates and typing indicators.
+### 🔐 Authentication
 
-## Core Features
+* User registration with securely hashed passwords
+* JWT-based authentication
+* HTTP-only authentication cookies
+* Persistent user sessions
+* Secure logout
 
-### Authentication
+### 📄 Document Management
 
-- User registration with hashed passwords.
-- Login with JWT stored in an HTTP-only cookie.
-- Session lookup through the me endpoint.
-- Logout by clearing the auth cookie.
+* Create rich-text documents
+* Edit document titles and content
+* View owned and shared documents
+* Track creation and last edited timestamps
 
-### Document Management
+### 🤝 Document Sharing
 
-- Create documents with a title, content, owner, and collaborators.
-- Fetch a combined list of owned documents and shared documents.
-- Keep document metadata such as creation time and last edited time.
+* Share documents using email addresses
+* Read and write permission levels
+* Prevent duplicate sharing
+* Separate sharing model for scalability
 
-### Sharing and Permissions
+### ⚡ Real-Time Collaboration
 
-- Share documents with other users by email.
-- Store share relationships in a separate collection.
-- Support permission levels for read and write access.
-- Prevent duplicate shares for the same user and document.
+* Live document synchronization using Socket.IO
+* Automatic room management for each document
+* Typing indicators
+* Instant updates across connected clients
 
-### Real-Time Collaboration
+### ✍️ Rich Text Editing
 
-- Sync editor content through Socket.IO.
-- Join a document room when a user opens a note.
-- Broadcast content updates to other connected clients.
-- Show typing indicators while someone is actively editing.
+Powered by TipTap with support for:
 
-### Rich Text Editing
+* Bold
+* Italic
+* Underline
+* Highlight
+* Links
+* Images
+* Tables
+* Text alignment
+* Subscript
+* Superscript
+* Text styling
+* StarterKit extensions
 
-- TipTap editor with StarterKit and extra extensions.
-- Support for links, images, underline, highlight, text alignment, subscript, superscript, tables, and text styling.
-- Separate view mode and edit mode behavior.
+### 🎨 User Experience
 
-### UI and State Management
+* Responsive dashboard
+* Modern editor interface
+* Protected routes
+* Loading and authentication states
+* Client-side state management with Zustand
 
-- Next.js App Router pages for login, register, dashboard, document creation, and sharing.
-- Zustand store for editor content state.
-- React hooks for auth and socket handling.
-- CSS modules for page-specific styling.
+---
 
-## Tech Stack
+# 🚀 Tech Stack
 
-- Next.js 16 with the App Router
-- React 19
-- TypeScript
-- MongoDB with Mongoose
-- JSON Web Tokens for auth
-- bcrypt for password hashing
-- Socket.IO for real-time communication
-- TipTap for rich text editing
-- Zustand for local editor state
-- Axios for client requests
+| Category         | Technologies                     |
+| ---------------- | -------------------------------- |
+| Frontend         | Next.js 16, React 19, TypeScript |
+| Backend          | Next.js Route Handlers, Node.js  |
+| Database         | MongoDB, Mongoose                |
+| Authentication   | JWT, HTTP-only Cookies, bcrypt   |
+| Realtime         | Socket.IO                        |
+| Editor           | TipTap                           |
+| State Management | Zustand                          |
+| HTTP Client      | Axios                            |
+| Styling          | CSS Modules                      |
 
-## Project Structure
+---
+
+# 🏗️ Project Architecture
+
+```text
+Client
+   │
+   ▼
+Next.js App Router
+   │
+   ├────────────── API Routes
+   │
+   ├────────────── Socket.IO Server
+   │
+   ▼
+MongoDB Database
+```
+
+---
+
+# 📁 Project Structure
 
 ```text
 app/
-  api/
-    auth/
-    documents/
-  create/
-  documents/
-  login/
-  logout/
-  register/
-  share/
+│
+├── api/
+│   ├── auth/
+│   └── documents/
+│
+├── create/
+├── documents/
+├── login/
+├── logout/
+├── register/
+├── share/
+│
 components/
-  editor/
+│   └── editor/
+│
 hooks/
 lib/
 models/
@@ -92,100 +125,231 @@ stores/
 styles/
 ```
 
-## Data Model
+---
 
-### User
+# 📚 Data Models
 
-The user model stores account information such as username, email, password, and verification-related fields.
+## User
 
-### Document
+Stores user account information.
 
-The document model stores the title, HTML content, owner reference, collaborators, and editing timestamps.
+Fields include:
 
-### Share
+* username
+* email
+* password (hashed)
+* verification fields
 
-The share model maps a document to a user and stores the permission granted to that user.
+---
 
-## API Routes
+## Document
 
-- `POST /api/auth/register` creates a new user account.
-- `POST /api/auth/login` validates credentials and sets the auth cookie.
-- `GET /api/auth/me` returns the current authenticated user.
-- `POST /api/auth/logout` clears the auth cookie.
-- `GET /api/documents` returns owned and shared documents.
-- `POST /api/documents` creates a new document.
-- `POST /api/documents/[id]/share` shares a document with another user.
-- `GET /api/documents/[id]/versions` exists as a route scaffold for version-related work.
+Represents an editable note.
 
-## Concepts Learned From This Project
+Stores:
 
-This project was built as a practical learning exercise for several full-stack concepts:
+* title
+* HTML content
+* owner
+* collaborators
+* timestamps
 
-- App Router architecture in Next.js, including nested pages and route handlers.
-- Server and client component boundaries, especially in the editor and auth flows.
-- JWT-based authentication using HTTP-only cookies.
-- Password hashing with bcrypt before storing credentials.
-- MongoDB relations using references, populated queries, and separate share documents.
-- Designing a document permission system with owner, collaborator, read, and write access.
-- Real-time collaboration with Socket.IO rooms and broadcast events.
-- Rich text editing with TipTap extensions and controlled editor state.
-- Using Zustand to keep shared editor content in sync.
-- Handling protected navigation and redirects on the client side.
-- Structuring a custom Node server so Next.js and WebSockets run together.
+---
 
-## Environment Variables
+## Share
 
-Create a `.env.local` file in the project root:
+Represents document permissions.
 
-```bash
-MONGODB_URI=your_mongodb_connection_string
-JWT_SECRET_KEY=your_jwt_secret
+Stores:
+
+* document reference
+* user reference
+* permission level
+* timestamps
+
+---
+
+# 🔄 Application Flow
+
+```text
+User Registers/Login
+          │
+          ▼
+     Dashboard
+          │
+          ▼
+Create Document
+          │
+          ▼
+Open Editor
+          │
+          ▼
+Share Document
+          │
+          ▼
+Multiple Users Join
+          │
+          ▼
+Real-Time Editing
 ```
 
-If you deploy the socket server separately, you may also want a client-side socket URL, but the current development setup connects to `http://localhost:3000` directly.
+---
 
-## Getting Started
+# 🔌 API Endpoints
 
-### Install Dependencies
+## Authentication
+
+| Method | Endpoint             | Description              |
+| ------ | -------------------- | ------------------------ |
+| POST   | `/api/auth/register` | Register a new user      |
+| POST   | `/api/auth/login`    | Login and create session |
+| GET    | `/api/auth/me`       | Get authenticated user   |
+| POST   | `/api/auth/logout`   | Logout user              |
+
+---
+
+## Documents
+
+| Method | Endpoint                       | Description                      |
+| ------ | ------------------------------ | -------------------------------- |
+| GET    | `/api/documents`               | Fetch owned and shared documents |
+| POST   | `/api/documents`               | Create document                  |
+| POST   | `/api/documents/[id]/share`    | Share document                   |
+| GET    | `/api/documents/[id]/versions` | Version history scaffold         |
+
+---
+
+# 🔒 Security
+
+* Passwords hashed using bcrypt
+* JWT authentication
+* HTTP-only cookies
+* Protected API routes
+* Ownership verification
+* Duplicate share prevention
+* Permission-based access control
+
+---
+
+# 💡 What I Learned
+
+Building NoteSync helped me gain practical experience with:
+
+* Next.js App Router
+* Server and Client Components
+* JWT Authentication
+* HTTP-only Cookies
+* MongoDB relationships
+* Mongoose population
+* Permission systems
+* Socket.IO rooms
+* Real-time synchronization
+* Rich-text editors with TipTap
+* Zustand state management
+* Protected routing
+* Building a custom Node.js server alongside Next.js
+
+---
+
+# ⚙️ Environment Variables
+
+Create a `.env.local` file.
+
+```env
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET_KEY=your_secret_key
+```
+
+---
+
+# 🚀 Getting Started
+
+## Clone the repository
+
+```bash
+git clone <repository-url>
+```
+
+```bash
+cd notesync
+```
+
+---
+
+## Install dependencies
 
 ```bash
 npm install
 ```
 
-### Run the App
+---
+
+## Start the development server
 
 ```bash
 npm run dev
 ```
 
-The development script runs `server.js`, which starts Next.js and Socket.IO on `http://localhost:3000`.
+The application will be available at:
 
-### Build for Production
+```text
+http://localhost:3000
+```
+
+---
+
+## Build for production
 
 ```bash
 npm run build
 ```
 
-### Start in Production Mode
+---
+
+## Start production server
 
 ```bash
-npm run start
+npm start
 ```
 
-## Notes
+---
 
-- The editor works best with MongoDB running and the environment variables configured.
-- Shared documents are resolved through both ownership and share records, so a user can see notes they created and notes shared with them.
-- Real-time sync depends on all clients connecting through the same Socket.IO server instance.
+# 🧠 Design Decisions
 
-## Future Improvements
+* JWT stored in HTTP-only cookies for improved security.
+* Separate `Share` collection to simplify permission management.
+* Socket.IO rooms isolate real-time updates per document.
+* TipTap provides an extensible rich-text editing experience.
+* Zustand keeps editor state lightweight and predictable.
 
-- Document version history UI and restore actions.
-- Comments and mentions inside documents.
-- Offline editing and sync recovery.
-- Activity logs for collaboration history.
-- Better mobile editor behavior.
+---
 
-## Author
+# 🚧 Future Improvements
 
-Built by Kushal Karki as a full-stack learning project.
+* Document version history
+* Restore previous versions
+* Inline comments
+* User mentions
+* Collaborative cursors
+* Presence indicators
+* Offline editing
+* Search functionality
+* Folder organization
+* Export to PDF and Markdown
+* Activity logs
+* Mobile editor improvements
+* Unit and integration tests
+
+---
+
+# 👨‍💻 Author
+
+**Kushal Karki**
+
+Built as a full-stack learning project to explore authentication, authorization, real-time collaboration, and scalable application architecture using the modern JavaScript ecosystem.
+
+---
+
+## ⭐ Support
+
+If you found this project useful, consider giving it a ⭐ on GitHub.
